@@ -204,12 +204,15 @@ async function runSearch() {
   
   try {
     const datePosted=selectedDays===1?'today':selectedDays===3?'week':'month';
-    const targetUrl='https://jsearch.p.rapidapi.com/search?query='+encodeURIComponent(query+' Dublin Ireland')+'&page=1&num_pages=1&date_posted='+datePosted+'&country=ie&rapidapi-key='+key;
-    const url='https://corsproxy.io/?'+encodeURIComponent(targetUrl);
+    // Add rapidapi-key AND rapidapi-host directly to the URL to authenticate properly
+    const targetUrl='https://jsearch.p.rapidapi.com/search?query='+encodeURIComponent(query+' Dublin Ireland')+'&page=1&num_pages=1&date_posted='+datePosted+'&country=ie&rapidapi-key='+key+'&rapidapi-host=jsearch.p.rapidapi.com';
     
-    // This logs to the console so we KNOW the new code is running
-    console.log("Running the PROXY version of the fetch function!");
+    // Use AllOrigins proxy instead of corsproxy.io
+    const url='https://api.allorigins.win/raw?url='+encodeURIComponent(targetUrl);
     
+    console.log("Running the ALLORIGINS version of the fetch function!");
+    
+    // Fetch WITHOUT custom headers to bypass the preflight OPTIONS request
     const res=await fetch(url);
     
     if (res.status===403||res.status===401){showError('Search failed \u2014 please try again shortly.');return;}
@@ -342,3 +345,5 @@ function showSnackbar(msg){const el=document.getElementById('snackbar');el.textC
 </script>
 </body>
 </html>
+
+```
