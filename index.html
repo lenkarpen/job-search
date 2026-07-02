@@ -201,21 +201,30 @@ async function runSearch() {
   const btn = document.getElementById('searchBtn');
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0"></div> Searching\u2026';
-  document.getElementById('resultsSection').innerHTML = '<div class="state-box"><div class="spinner"></div><p>Fetching fresh jobs from API\u2026</p></div>';
+  document.getElementById('resultsSection').innerHTML = '<div class="state-box"><div class="spinner"></div><p>Fetching real jobs via CORS Anywhere\u2026</p></div>';
   
   try {
     const datePosted = selectedDays === 1 ? 'today' : selectedDays === 3 ? 'week' : 'month';
     
-    // The key is safely packed inside the URL query string
-    const targetUrl = 'https://jsearch.p.rapidapi.com/search?query=' + encodeURIComponent(query + ' Dublin Ireland') + '&page=1&num_pages=1&date_posted=' + datePosted + '&country=ie&rapidapi-key=' + key;
+    // 1. The pure RapidAPI URL
+    const targetUrl = 'https://jsearch.p.rapidapi.com/search?query=' + encodeURIComponent(query + ' Dublin Ireland') + '&page=1&num_pages=1&date_posted=' + datePosted + '&country=ie';
     
-    console.log("Running the TRULY HEADER-FREE version!");
+    // 2. Prepend the CORS Anywhere proxy
+    const url = 'https://cors-anywhere.herokuapp.com/' + targetUrl;
     
-    // LOOK MA, NO HEADERS! A pure, simple browser GET request that completely skips CORS preflights.
-    const res = await fetch(targetUrl);
+    // 3. Send the request WITH the proper headers intact
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Key': key,
+        'X-RapidAPI-Host': 'jsearch.p.rapidapi.com',
+        'Accept': 'application/json'
+      }
+    });
     
-    if (res.status === 403 || res.status === 401) {
-      showError('Search failed \u2014 API key rejected or quota met.');
+    // 4. Catch the specific 403 error that tells you to click the unlock button
+    if (res.status === 403) {
+      showError('Please unlock the proxy! Go to <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">cors-anywhere.herokuapp.com/corsdemo</a> and click "Request temporary access", then try again.');
       return;
     }
     
