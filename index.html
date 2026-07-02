@@ -201,23 +201,18 @@ async function runSearch() {
   const btn = document.getElementById('searchBtn');
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0"></div> Searching\u2026';
-  document.getElementById('resultsSection').innerHTML = '<div class="state-box"><div class="spinner"></div><p>Fetching fresh jobs from JSearch API\u2026</p></div>';
+  document.getElementById('resultsSection').innerHTML = '<div class="state-box"><div class="spinner"></div><p>Fetching fresh jobs from API\u2026</p></div>';
   
   try {
     const datePosted = selectedDays === 1 ? 'today' : selectedDays === 3 ? 'week' : 'month';
     
-    // Pure, direct URL with CORRECT parameters (num_pages=1). No proxies!
-    const targetUrl = 'https://jsearch.p.rapidapi.com/search?query=' + encodeURIComponent(query + ' Dublin Ireland') + '&page=1&num_pages=1&date_posted=' + datePosted + '&country=ie';
+    // The key is safely packed inside the URL query string
+    const targetUrl = 'https://jsearch.p.rapidapi.com/search?query=' + encodeURIComponent(query + ' Dublin Ireland') + '&page=1&num_pages=1&date_posted=' + datePosted + '&country=ie&rapidapi-key=' + key;
     
-    console.log("Running the PURE DIRECT FETCH version!");
+    console.log("Running the TRULY HEADER-FREE version!");
     
-    const res = await fetch(targetUrl, {
-      method: 'GET',
-      headers: {
-        'X-RapidAPI-Key': key,
-        'X-RapidAPI-Host': 'jsearch.p.rapidapi.com'
-      }
-    });
+    // LOOK MA, NO HEADERS! A pure, simple browser GET request that completely skips CORS preflights.
+    const res = await fetch(targetUrl);
     
     if (res.status === 403 || res.status === 401) {
       showError('Search failed \u2014 API key rejected or quota met.');
@@ -225,7 +220,6 @@ async function runSearch() {
     }
     
     if (!res.ok) {
-      // Print the exact API response to the screen so we can see what RapidAPI is complaining about
       const errorText = await res.text();
       showError('API error (' + res.status + ') \u2014 ' + errorText);
       return;
