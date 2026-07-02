@@ -201,37 +201,23 @@ async function runSearch() {
   const btn=document.getElementById('searchBtn');
   btn.disabled=true;
   btn.innerHTML='<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0"></div> Searching\u2026';
-  document.getElementById('resultsSection').innerHTML='<div class="state-box"><div class="spinner"></div><p>Fetching fresh jobs from LinkedIn\u2026</p></div>';
+  document.getElementById('resultsSection').innerHTML='<div class="state-box"><div class="spinner"></div><p>Fetching fresh jobs directly from RapidAPI\u2026</p></div>';
   
   try {
     const datePosted = selectedDays === 1 ? 'today' : selectedDays === 3 ? 'week' : 'month';
     
-    // We only encode the search term itself, NOT the entire URL string
-    const encodedQuery = encodeURIComponent(query + ' Dublin Ireland');
+    // THE ULTIMATE BYPASS: Send the API key right in the URL parameters
+    const url = 'https://jsearch.p.rapidapi.com/search?query=' + encodeURIComponent(query + ' Dublin Ireland') + '&page=1&num_pages=1&date_posted=' + datePosted + '&country=ie&rapidapi-key=' + key;
     
-    // Build the raw target URL
-    const targetUrl = 'https://jsearch.p.rapidapi.com/search?query=' + encodedQuery + '&page=1&num_pages=1&date_posted=' + datePosted + '&country=ie';
+    console.log("Running the DIRECT PROXY-FREE version!");
     
-    // Magic Fix: Pass it to corsproxy WITHOUT encodeURIComponent! 
-    // This stops RapidAPI from reading encoded slashes as broken endpoint names.
-    const url = 'https://corsproxy.io/?' + targetUrl;
+    // Fetch WITHOUT headers. This prevents the browser from sending the OPTIONS preflight entirely!
+    const res = await fetch(url);
     
-    console.log("Running the FINAL CORSPROXY version!");
-    
-    // Pass the headers so RapidAPI's gateway knows exactly which API we want to access.
-    const res = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'X-RapidAPI-Key': key,
-        'X-RapidAPI-Host': 'jsearch.p.rapidapi.com'
-      }
-    });
-    
-    if (res.status===403||res.status===401){showError('Search failed \u2014 please try again shortly.');return;}
+    if (res.status===403||res.status===401){showError('Search failed \u2014 API key rejected or quota met.');return;}
     if (!res.ok){showError('API error ('+res.status+') \u2014 please try again shortly.');return;}
     const data=await res.json();
     
-    // Catch if the API itself returned an error message despite a 200 OK status
     if (data.message) {
         showError('API error: ' + data.message);
         return;
@@ -364,7 +350,3 @@ function showSnackbar(msg){const el=document.getElementById('snackbar');el.textC
 </script>
 </body>
 </html>
-
-```
-
-Commit it, clear the cache one last time with `?fresh=7`, and let's bring those jobs home!
