@@ -196,7 +196,6 @@ document.querySelectorAll('.tf-btn').forEach(btn=>{
 
 async function runSearch() {
   const key='c443b38406msh04817689046f774p18ab8fjsneba82a16742d';
-  // Hardcoded query since the input was removed
   const query='IT Support Specialist OR IT Support Analyst OR Helpdesk Engineer OR Systems Administrator OR Desktop Support';
   const btn=document.getElementById('searchBtn');
   btn.disabled=true;
@@ -205,12 +204,12 @@ async function runSearch() {
   
   try {
     const datePosted=selectedDays===1?'today':selectedDays===3?'week':'month';
-    // Append the API key to the URL parameters
     const targetUrl='https://jsearch.p.rapidapi.com/search?query='+encodeURIComponent(query+' Dublin Ireland')+'&page=1&num_pages=1&date_posted='+datePosted+'&country=ie&rapidapi-key='+key;
-    // Wrap it in the CORS proxy
     const url='https://corsproxy.io/?'+encodeURIComponent(targetUrl);
     
-    // Fetch WITHOUT custom headers to bypass the preflight OPTIONS request
+    // This logs to the console so we KNOW the new code is running
+    console.log("Running the PROXY version of the fetch function!");
+    
     const res=await fetch(url);
     
     if (res.status===403||res.status===401){showError('Search failed \u2014 please try again shortly.');return;}
@@ -343,5 +342,3 @@ function showSnackbar(msg){const el=document.getElementById('snackbar');el.textC
 </script>
 </body>
 </html>
-
-```
