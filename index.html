@@ -204,33 +204,34 @@ async function runSearch() {
   document.getElementById('resultsSection').innerHTML='<div class="state-box"><div class="spinner"></div><p>Fetching fresh jobs from LinkedIn\u2026</p></div>';
   
   try {
-    const datePosted=selectedDays===1?'today':selectedDays===3?'week':'month';
+    const datePosted = selectedDays === 1 ? 'today' : selectedDays === 3 ? 'week' : 'month';
     
-    // We add a timestamp to the very end so the proxy never caches an old error response
-    const targetUrl='https://jsearch.p.rapidapi.com/search?query='+encodeURIComponent(query+' Dublin Ireland')+'&page=1&num_pages=1&date_posted='+datePosted+'&country=ie&rapidapi-key='+key+'&rapidapi-host=jsearch.p.rapidapi.com&_t='+Date.now();
+    // We only encode the search term itself, NOT the entire URL string
+    const encodedQuery = encodeURIComponent(query + ' Dublin Ireland');
     
-    // Use the JSON wrapper /get endpoint instead of the raw passthrough!
-    const url='https://api.allorigins.win/get?url='+encodeURIComponent(targetUrl);
+    // Build the raw target URL
+    const targetUrl = 'https://jsearch.p.rapidapi.com/search?query=' + encodedQuery + '&page=1&num_pages=1&date_posted=' + datePosted + '&country=ie';
     
-    console.log("Running the ALLORIGINS JSON WRAPPER version!");
+    // Magic Fix: Pass it to corsproxy WITHOUT encodeURIComponent! 
+    // This stops RapidAPI from reading encoded slashes as broken endpoint names.
+    const url = 'https://corsproxy.io/?' + targetUrl;
     
-    // Fetch the JSON box
-    const res=await fetch(url);
-    if (!res.ok){showError('Proxy failed to connect \u2014 please try again shortly.');return;}
+    console.log("Running the FINAL CORSPROXY version!");
     
-    // Open the JSON box
-    const proxyData=await res.json();
+    // Pass the headers so RapidAPI's gateway knows exactly which API we want to access.
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Key': key,
+        'X-RapidAPI-Host': 'jsearch.p.rapidapi.com'
+      }
+    });
     
-    // Check if AllOrigins actually managed to grab data from RapidAPI
-    if (!proxyData.contents) {
-        showError('No data returned from API \u2014 RapidAPI might be throttling requests.');
-        return;
-    }
-
-    // Parse the actual JSearch data inside the box
-    const data=JSON.parse(proxyData.contents);
+    if (res.status===403||res.status===401){showError('Search failed \u2014 please try again shortly.');return;}
+    if (!res.ok){showError('API error ('+res.status+') \u2014 please try again shortly.');return;}
+    const data=await res.json();
     
-    // If the proxy connected but RapidAPI threw an error, catch it
+    // Catch if the API itself returned an error message despite a 200 OK status
     if (data.message) {
         showError('API error: ' + data.message);
         return;
@@ -363,3 +364,7 @@ function showSnackbar(msg){const el=document.getElementById('snackbar');el.textC
 </script>
 </body>
 </html>
+
+```
+
+Commit it, clear the cache one last time with `?fresh=7`, and let's bring those jobs home!
