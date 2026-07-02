@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olena · Job Search</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --white:  #ffffff;
+    --p50:    #F4F4FB;
+    --p100:   #EBEBF8;
+    --p200:   #D2D2ED;
+    --p300:   #B3B3DC;
+    --p400:   #8B8EC8;
+    --p600:   #6264A7;
+    --p700:   #5254A3;
+    --p800:   #464775;
+    --z50:    #fafafa;
+    --z100:   #f4f4f5;
+    --z200:   #e4e4e7;
+    --z300:   #d4d4d8;
+    --z400:   #a1a1aa;
+    --z500:   #71717a;
+    --z700:   #3f3f46;
+    --z900:   #18181b;
+    --green50:  #f0fdf4;
+    --green200: #bbf7d0;
+    --green600: #16a34a;
+    --green700: #15803d;
+    --amber50:  #fffbeb;
+    --amber200: #fde68a;
+    --amber600: #d97706;
+    --amber700: #b45309;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-pill: 9999px;
+    --shadow-sm: 0 1px 3px rgba(98,100,167,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 12px rgba(98,100,167,.12), 0 2px 4px rgba(0,0,0,.06);
+    --shadow-lg: 0 10px 30px rgba(98,100,167,.16);
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-serif: 'Fraunces', Georgia, serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); background: var(--p50); color: var(--z900); min-height: 100vh; line-height: 1.6; }
+  .header { background: var(--white); border-bottom: 1px solid var(--p200); padding: 0 2rem; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm); }
+  .header-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 1.5rem; }
+  .logo { font-family: var(--font-serif); font-size: 1.35rem; font-weight: 700; color: var(--p800); text-decoration: none; white-space: nowrap; flex-shrink: 0; }
+  .logo span { color: var(--p400); font-weight: 300; font-style: italic; }
+  .api-bar { background: var(--p100); border-bottom: 1px solid var(--p200); padding: 0.75rem 2rem; }
+  .api-bar-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .api-bar label { font-size: 0.8rem; font-weight: 600; color: var(--p700); letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; }
+  .api-input { flex: 1; min-width: 240px; max-width: 420px; padding: 0.45rem 0.85rem; border: 1.5px solid var(--p300); border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.82rem; background: var(--white); color: var(--z900); outline: none; transition: border-color 0.15s; }
+  .api-input:focus { border-color: var(--p600); }
+  .api-hint { font-size: 0.78rem; color: var(--z500); }
+  .api-hint a { color: var(--p600); text-decoration: underline; }
+  .api-status { font-size: 0.78rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: var(--radius-pill); }
+  .api-status.ok { background: var(--green50); color: var(--green700); border: 1px solid var(--green200); }
+  .api-status.missing { background: var(--amber50); color: var(--amber700); border: 1px solid var(--amber200); }
+  .search-section { max-width: 1120px; margin: 2rem auto; padding: 0 2rem; }
+  .search-heading { font-family: var(--font-serif); font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; color: var(--z900); margin-bottom: 0.35rem; }
+  .search-sub { font-size: 0.92rem; color: var(--z500); margin-bottom: 1.5rem; }
+  .search-card { background: var(--white); border: 1px solid var(--p200); border-radius: var(--radius-xl); padding: 1.75rem 2rem; box-shadow: var(--shadow-sm); }
+  .search-row { display: grid; grid-template-columns: 1fr auto auto; gap: 0.85rem; align-items: end; }
+  .field-group { display: flex; flex-direction: column; gap: 0.35rem; }
+  .field-label { font-size: 0.76rem; font-weight: 600; color: var(--p700); letter-spacing: 0.07em; text-transform: uppercase; }
+  .search-input { padding: 0.6rem 1rem; border: 1.5px solid var(--p200); border-radius: var(--radius-md); font-family: var(--font-sans); font-size: 0.92rem; color: var(--z900); background: var(--white); outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+  .search-input:focus { border-color: var(--p600); box-shadow: 0 0 0 3px rgba(98,100,167,.12); }
+  .timeframe-group { display: flex; gap: 0.5rem; }
+  .tf-btn { padding: 0.6rem 1rem; border: 1.5px solid var(--p200); border-radius: var(--radius-md); font-family: var(--font-sans); font-size: 0.84rem; font-weight: 600; color: var(--z500); background: var(--white); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .tf-btn:hover { border-color: var(--p400); color: var(--p700); background: var(--p50); }
+  .tf-btn.active { border-color: var(--p600); color: var(--white); background: var(--p600); }
+  .search-btn { padding: 0.65rem 1.75rem; background: var(--p600); color: var(--white); border: none; border-radius: var(--radius-md); font-family: var(--font-sans); font-size: 0.92rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; display: flex; align-items: center; gap: 0.5rem; }
+  .search-btn:hover { background: var(--p700); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .search-btn:active { transform: translateY(0); }
+  .search-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+  .legend { display: flex; gap: 1.5rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--p100); flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--z500); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-dot.green { background: var(--green600); }
+  .legend-dot.amber { background: var(--amber600); }
+  .results-section { max-width: 1120px; margin: 0 auto 3rem; padding: 0 2rem; }
+  .results-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem; }
+  .results-count { font-size: 0.85rem; color: var(--z500); }
+  .results-count strong { color: var(--z700); }
+  .results-split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+  .results-col-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.75rem; padding: 0.35rem 0.85rem; border-radius: var(--radius-pill); display: inline-flex; align-items: center; gap: 0.4rem; }
+  .results-col-label.green { background: var(--green50); color: var(--green700); border: 1px solid var(--green200); }
+  .results-col-label.amber { background: var(--amber50); color: var(--amber700); border: 1px solid var(--amber200); }
+  .job-card { background: var(--white); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); border: 1px solid var(--p200); border-left: 4px solid transparent; transition: box-shadow 0.2s, transform 0.15s; position: relative; }
+  .job-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .job-card.green { border-left-color: var(--green600); }
+  .job-card.amber { border-left-color: var(--amber600); }
+  .job-card-top { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 0.85rem; }
+  .job-logo { width: 44px; height: 44px; border-radius: var(--radius-sm); border: 1px solid var(--z200); background: var(--z50); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: var(--z400); overflow: hidden; }
+  .job-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .job-main { flex: 1; min-width: 0; }
+  .job-title { font-family: var(--font-serif); font-size: 1.05rem; font-weight: 600; color: var(--z900); line-height: 1.3; margin-bottom: 0.2rem; }
+  .job-title a { color: inherit; text-decoration: none; }
+  .job-title a:hover { color: var(--p700); text-decoration: underline; }
+  .job-company { font-size: 0.88rem; color: var(--p700); font-weight: 500; }
+  .job-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+  .job-tag { font-size: 0.74rem; padding: 0.2rem 0.65rem; border-radius: var(--radius-pill); font-weight: 500; white-space: nowrap; }
+  .job-tag.location { background: var(--p100); color: var(--p700); border: 1px solid var(--p200); }
+  .job-tag.salary { background: var(--green50); color: var(--green700); border: 1px solid var(--green200); }
+  .job-tag.type { background: var(--z100); color: var(--z700); border: 1px solid var(--z200); }
+  .job-tag.age { background: var(--amber50); color: var(--amber700); border: 1px solid var(--amber200); }
+  .job-match-reason { font-size: 0.8rem; color: var(--z500); margin-top: 0.6rem; font-style: italic; line-height: 1.5; }
+  .job-actions { display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--p100); }
+  .btn-outline { padding: 0.45rem 1rem; border: 1.5px solid var(--p300); border-radius: var(--radius-md); font-size: 0.8rem; font-weight: 600; color: var(--p700); background: var(--white); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 0.35rem; text-decoration: none; }
+  .btn-outline:hover { background: var(--p100); border-color: var(--p600); }
+  .btn-primary-sm { padding: 0.45rem 1rem; border: none; border-radius: var(--radius-md); font-size: 0.8rem; font-weight: 600; color: var(--white); background: var(--p600); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 0.35rem; }
+  .btn-primary-sm:hover { background: var(--p700); }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(18,18,27,.55); z-index: 1000; align-items: center; justify-content: center; padding: 1.5rem; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--white); border-radius: var(--radius-xl); width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; }
+  .modal-header { padding: 1.5rem 2rem 1rem; border-bottom: 1px solid var(--p200); display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; position: sticky; top: 0; background: var(--white); z-index: 1; border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+  .modal-title { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 700; color: var(--z900); line-height: 1.3; }
+  .modal-subtitle { font-size: 0.82rem; color: var(--z500); margin-top: 0.2rem; }
+  .modal-close { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--z200); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: var(--z500); flex-shrink: 0; transition: all 0.15s; }
+  .modal-close:hover { background: var(--z100); color: var(--z900); }
+  .modal-body { padding: 1.5rem 2rem 2rem; flex: 1; }
+  .modal-body textarea { width: 100%; min-height: 420px; padding: 1rem; border: 1.5px solid var(--p200); border-radius: var(--radius-md); font-family: var(--font-sans); font-size: 0.88rem; line-height: 1.7; color: var(--z700); background: var(--z50); resize: vertical; outline: none; transition: border-color 0.15s; }
+  .modal-body textarea:focus { border-color: var(--p600); background: var(--white); }
+  .modal-footer { display: flex; gap: 0.75rem; margin-top: 1.25rem; justify-content: flex-end; flex-wrap: wrap; }
+  .btn-lg { padding: 0.65rem 1.5rem; border-radius: var(--radius-md); font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 0.4rem; }
+  .btn-lg.primary { background: var(--p600); color: var(--white); border: none; }
+  .btn-lg.primary:hover { background: var(--p700); transform: translateY(-1px); }
+  .btn-lg.secondary { background: var(--white); color: var(--p700); border: 1.5px solid var(--p300); }
+  .btn-lg.secondary:hover { background: var(--p100); }
+  .state-box { text-align: center; padding: 4rem 2rem; color: var(--z400); }
+  .state-box .state-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+  .state-box p { font-size: 0.95rem; max-width: 380px; margin: 0 auto; line-height: 1.6; }
+  .state-box p strong { color: var(--z700); }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--p200); border-top-color: var(--p600); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 1rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .snackbar { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--z900); color: var(--white); padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); font-size: 0.85rem; font-weight: 500; box-shadow: var(--shadow-lg); z-index: 9999; transition: transform 0.3s ease; white-space: nowrap; }
+  .snackbar.show { transform: translateX(-50%) translateY(0); }
+  @media (max-width: 800px) {
+    .search-row { grid-template-columns: 1fr; }
+    .results-split { grid-template-columns: 1fr; }
+    .timeframe-group { flex-wrap: wrap; }
+    .header-inner { flex-wrap: wrap; height: auto; padding: 0.75rem 0; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a class="logo" href="#">Olena <span>&middot; job search</span></a>
+  </div>
+</header>
+
+<div class="api-bar">
+  <div class="api-bar-inner">
+    <label for="apiKeyInput">RapidAPI Key</label>
+    <input class="api-input" type="password" id="apiKeyInput" placeholder="Paste your JSearch key here…" autocomplete="off">
+    <span class="api-status missing" id="apiStatus">No key</span>
+    <span class="api-hint">Free key at <a href="https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch" target="_blank" rel="noopener">rapidapi.com/jsearch</a> &middot; stored in your browser only</span>
+  </div>
+</div>
+
+<main class="search-section">
+  <h1 class="search-heading">Find your next role</h1>
+  <p class="search-sub">LinkedIn jobs &middot; Dublin &middot; filtered for realistic fit</p>
+  <div class="search-card">
+    <div class="search-row">
+      <div class="field-group">
+        <span class="field-label">Keywords</span>
+        <input class="search-input" type="text" id="queryInput" value="IT Support Specialist OR IT Support Analyst OR Helpdesk Engineer OR Systems Administrator OR Desktop Support" placeholder="Job title, skills…">
+      </div>
+      <div class="field-group">
+        <span class="field-label">Timeframe</span>
+        <div class="timeframe-group">
+          <button class="tf-btn active" data-days="1">24 h</button>
+          <button class="tf-btn" data-days="3">3 days</button>
+          <button class="tf-btn" data-days="7">7 days</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <span class="field-label">&nbsp;</span>
+        <button class="search-btn" id="searchBtn" onclick="runSearch()">
+          <span>&#x1F50D;</span> Search
+        </button>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot green"></div><span><strong>Good match</strong> &mdash; Dublin 1&ndash;8, likely &euro;35k+, strong skills overlap</span></div>
+      <div class="legend-item"><div class="legend-dot amber"></div><span><strong>Loose match</strong> &mdash; worth a look, outside ideal or partial fit</span></div>
+    </div>
+  </div>
+</main>
+
+<section class="results-section" id="resultsSection">
+  <div class="state-box">
+    <span class="state-icon">&#x1F50E;</span>
+    <p>Add your <strong>RapidAPI key</strong> above (free tier, ~200 searches/month), then hit Search to pull fresh LinkedIn jobs.</p>
+  </div>
+</section>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle">Cover Letter</div>
+        <div class="modal-subtitle" id="modalSubtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="coverLetterText" spellcheck="true"></textarea>
+      <div class="modal-footer">
+        <button class="btn-lg secondary" onclick="copyLetter()">&#x1F4CB; Copy</button>
+        <button class="btn-lg primary" onclick="downloadPDF()">&#x2B07; Download PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="snackbar" id="snackbar"></div>
+
+<script>
+const PROFILE = {
+  name: "Olena Karpenko",
+  title: "IT Support Specialist",
+  location: "Dublin 2, Ireland",
+  email: "olenakarp.ie@gmail.com",
+  phone: "+353 85 735 6626",
+  linkedin: "linkedin.com/in/olenakarp",
+  portfolio: "lenkarpen.github.io",
+  stampNote: "Stamp 4 holder \u2014 full right to work in Ireland, no employer sponsorship required.",
+  references: [
+    { name: "Fabio Pierotti", title: "Regional Productivity Engineering Operations Lead, LinkedIn", email: "fpierotti@linkedin.com", phone: "+353 1 517 8080" },
+    { name: "Preety Ranjan", title: "EMEA Helpdesk Lead, HCL", email: "preety_ranjan@hcltech.com", phone: "+353 1 242 3263" }
+  ]
+};
+
+const GOOD_POSTCODES = /dublin\s*[1-8]\b|dublin\s*city\s*cent|grand\s*canal|docklands|city\s*cent/i;
+const STRONG_KW = ["it support","helpdesk","help desk","service desk","desktop support","end user","end-user","systems administrator","sysadmin","it analyst","support analyst","support engineer","infrastructure","azure","m365","microsoft 365","active directory","entra","vdi","intune","servicenow","windows","macos","technical support"];
+
+function scoreJob(job) {
+  const text = (job.title+' '+job.company+' '+job.location+' '+(job.description||'')).toLowerCase();
+  let score = 0, reasons = [];
+  const loc = (job.location||'').toLowerCase();
+  if (GOOD_POSTCODES.test(loc)) { score+=3; reasons.push('Dublin 1\u20138'); }
+  else if (/dublin/i.test(loc)) { score+=1; reasons.push('Dublin'); }
+  if (job.salary_min && job.salary_min>=35000) { score+=2; reasons.push('\u20ac'+(job.salary_min/1000).toFixed(0)+'k+'); }
+  else if (/\b(35|36|37|38|39|40|41|42|43|44|45|50|55|60)\s*k/i.test(text)) { score+=1; reasons.push('salary ~35k+'); }
+  let hits=0; STRONG_KW.forEach(k=>{ if(text.includes(k)) hits++; });
+  if (hits>=3) { score+=3; reasons.push(hits+' skill matches'); }
+  else if (hits>=1) { score+=1; reasons.push(hits+' skill match'); }
+  if (/remote/i.test(loc) && !/dublin/i.test(loc)) score-=1;
+  return { score, isGreen: score>=4, reasons };
+}
+
+let selectedDays=1, currentJob=null, allJobs=[];
+
+const keyInput=document.getElementById('apiKeyInput');
+const statusEl=document.getElementById('apiStatus');
+function updateKeyStatus(v) {
+  if (v&&v.trim().length>10) { statusEl.textContent='Key saved'; statusEl.className='api-status ok'; }
+  else { statusEl.textContent='No key'; statusEl.className='api-status missing'; }
+}
+keyInput.addEventListener('input',()=>{ const v=keyInput.value.trim(); localStorage.setItem('jsearch_key',v); updateKeyStatus(v); });
+const saved=localStorage.getItem('jsearch_key')||''; keyInput.value=saved; updateKeyStatus(saved);
+
+document.querySelectorAll('.tf-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedDays=parseInt(btn.dataset.days);
+  });
+});
+
+async function runSearch() {
+  const key=(localStorage.getItem('jsearch_key')||'').trim();
+  if (!key) { showSnackbar('\u26a0\ufe0f Please add your RapidAPI key first'); keyInput.focus(); return; }
+  const query=document.getElementById('queryInput').value.trim()||'IT Support';
+  const btn=document.getElementById('searchBtn');
+  btn.disabled=true; btn.innerHTML='<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0"></div> Searching\u2026';
+  document.getElementById('resultsSection').innerHTML='<div class="state-box"><div class="spinner"></div><p>Fetching fresh jobs from LinkedIn\u2026</p></div>';
+  try {
+    const datePosted=selectedDays===1?'today':selectedDays===3?'week':'month';
+    const url='https://jsearch.p.rapidapi.com/search?query='+encodeURIComponent(query+' Dublin Ireland')+'&page=1&num_b=20&date_posted='+datePosted+'&country=ie';
+    const res=await fetch(url,{method:'GET',headers:{'X-RapidAPI-Key':key,'X-RapidAPI-Host':'jsearch.p.rapidapi.com'}});
+    if (res.status===403||res.status===401) { showError('Invalid API key \u2014 please check your RapidAPI key.'); return; }
+    if (!res.ok) { showError('API error ('+res.status+') \u2014 please try again shortly.'); return; }
+    const data=await res.json();
+    allJobs=(data.data||[]).map(j=>({
+      id:j.job_id, title:j.job_title||'', company:j.employer_name||'',
+      location:[j.job_city,j.job_state,j.job_country].filter(Boolean).join(', ')||'Ireland',
+      description:j.job_description||'', url:j.job_apply_link||j.job_google_link||'#',
+      logo:j.employer_logo||null, type:j.job_employment_type||'',
+      salary_min:j.job_min_salary||null, salary_max:j.job_max_salary||null,
+      posted:j.job_posted_at_datetime_utc||null
+    }));
+    renderResults(allJobs);
+  } catch(e) { showError('Network error \u2014 check your connection and try again.'); }
+  finally { btn.disabled=false; btn.innerHTML='<span>&#x1F50D;</span> Search'; }
+}
+
+function esc(s) { return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'):''; }
+function fmtSalary(j) { if(!j.salary_min&&!j.salary_max) return null; const f=n=>'\u20ac'+Math.round(n/1000)+'k'; if(j.salary_min&&j.salary_max) return f(j.salary_min)+'\u2013'+f(j.salary_max); if(j.salary_min) return f(j.salary_min)+'+'; return 'up to '+f(j.salary_max); }
+function fmtAge(p) { if(!p) return null; const d=Math.round((Date.now()-new Date(p).getTime())/86400000); if(d===0) return 'today'; if(d===1) return '1 day ago'; return d+' days ago'; }
+
+function renderResults(jobs) {
+  const sec=document.getElementById('resultsSection');
+  if (!jobs.length) { sec.innerHTML='<div class="state-box"><span class="state-icon">&#x1F636;</span><p>No jobs found. Try widening keywords or switching to 7 days.</p></div>'; return; }
+  const green=jobs.filter(j=>scoreJob(j).isGreen);
+  const amber=jobs.filter(j=>!scoreJob(j).isGreen);
+  sec.innerHTML='<div class="results-header"><div class="results-count"><strong>'+jobs.length+'</strong> result'+(jobs.length!==1?'s':'')+' &middot; <strong>'+green.length+'</strong> good match &middot; <strong>'+amber.length+'</strong> loose match</div></div><div class="results-split"><div><div class="results-col-label green">&#x2705; Good match ('+green.length+')</div><div id="greenCol">'+(green.length?green.map(jobCard).join(''):'<p style="color:var(--z400);font-size:.88rem;padding:.5rem 0">No strong matches this timeframe \u2014 try 7 days.</p>')+'</div></div><div><div class="results-col-label amber">&#x1F7E1; Loose match ('+amber.length+')</div><div>'+amber.map(jobCard).join('')+'</div></div></div>';
+}
+
+function jobCard(job) {
+  const {isGreen,reasons}=scoreJob(job);
+  const salary=fmtSalary(job), age=fmtAge(job.posted);
+  const logo=job.logo?'<div class="job-logo"><img src="'+esc(job.logo)+'" alt="'+esc(job.company)+'" onerror="this.parentElement.innerHTML=\'&#x1F3E2;\'"></div>':'<div class="job-logo">&#x1F3E2;</div>';
+  return '<div class="job-card '+(isGreen?'green':'amber')+'">'+
+    '<div class="job-card-top">'+logo+'<div class="job-main">'+
+    '<div class="job-title"><a href="'+esc(job.url)+'" target="_blank" rel="noopener">'+esc(job.title)+'</a></div>'+
+    '<div class="job-company">'+esc(job.company)+'</div>'+
+    '<div class="job-meta">'+
+    '<span class="job-tag location">&#x1F4CD; '+esc(job.location)+'</span>'+
+    (salary?'<span class="job-tag salary">'+esc(salary)+'</span>':'')+
+    (job.type?'<span class="job-tag type">'+esc(job.type)+'</span>':'')+
+    (age?'<span class="job-tag age">'+esc(age)+'</span>':'')+
+    '</div>'+
+    (reasons.length?'<div class="job-match-reason">Match signals: '+reasons.join(' &middot; ')+'</div>':'')+
+    '</div></div>'+
+    '<div class="job-actions">'+
+    '<a class="btn-outline" href="'+esc(job.url)+'" target="_blank" rel="noopener">&#x1F517; View job</a>'+
+    '<button class="btn-primary-sm" onclick="openCoverLetter(\''+esc(job.id)+'\')" >&#x2709;&#xFE0F; Cover letter</button>'+
+    '</div></div>';
+}
+
+function showError(msg) { document.getElementById('resultsSection').innerHTML='<div class="state-box"><span class="state-icon">&#x26A0;&#xFE0F;</span><p>'+msg+'</p></div>'; }
+
+function openCoverLetter(jobId) {
+  const job=allJobs.find(j=>j.id===jobId); if(!job) return;
+  currentJob=job;
+  document.getElementById('modalTitle').textContent='Cover Letter \u2014 '+job.title;
+  document.getElementById('modalSubtitle').textContent=job.company+(job.location?' \u00b7 '+job.location:'');
+  document.getElementById('coverLetterText').value=generateCoverLetter(job);
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; currentJob=null; }
+document.getElementById('modalOverlay').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeModal(); });
+
+function generateCoverLetter(job) {
+  const today=new Date().toLocaleDateString('en-IE',{day:'numeric',month:'long',year:'numeric'});
+  const jt=(job.title+' '+(job.description||'')).toLowerCase();
+  let bullets;
+  if (/azure|cloud|infrastructure|sysadmin|system.admin/i.test(jt)) {
+    bullets=`\u2013  Azure & identity:  Hands-on with Entra ID \u2014 users, groups, MFA and Conditional Access \u2014 and Azure Fundamentals (AZ-900) certified, building on that daily.\n\n\u2013  Microsoft 365 administration:  Day-to-day admin of Exchange Online, Teams, SharePoint and OneDrive, plus Intune for device management and compliance.\n\n\u2013  Active Directory & VDI:  Manage AD accounts, groups, and Group Policy alongside Entra ID in a hybrid setup; own end-to-end Omnissa Horizon VDI onboarding for EMEA.\n\n\u2013  Automation:  Built a Python pipeline (pandas + BeautifulSoup) that cut a two-hour daily onboarding job to under ten minutes \u2014 handed off via SOP as the team standard. PowerShell for bulk AD tasks.\n\n\u2013  Reliable & documented:  Clean ServiceNow records, Confluence KB articles, and ownership of a problem until it\u2019s properly resolved.`;
+  } else if (/helpdesk|help.desk|service.desk|support.desk|support.engineer|end.user/i.test(jt)) {
+    bullets=`\u2013  End-user support, on-site & remote:  Daily first- and second-line support across phone, chat and in person \u2014 from quick fixes to the harder tickets colleagues escalate to me.\n\n\u2013  Microsoft 365 & identity:  Hands-on M365 (Outlook, Teams, OneDrive, SharePoint, Intune), Active Directory and Entra ID, MFA and Conditional Access. Azure Fundamentals (AZ-900) certified.\n\n\u2013  Hardware & device lifecycle:  Imaging and deploying Windows and Mac devices; full joiner/leaver onboarding and offboarding; secure decommissioning.\n\n\u2013  Clean records & SLAs:  Tidy, audit-ready ServiceNow tickets, meeting SLA targets, and following up so the user is genuinely sorted \u2014 not just closed off.\n\n\u2013  Calm and reliable:  I stay calm under pressure, take ownership of a problem until it\u2019s fixed, and write clear KB articles and SOPs so fixes are repeatable.`;
+  } else {
+    bullets=`\u2013  Fast-paced corporate service desk:  Two years at LinkedIn Dublin \u2014 on-site desktop, global remote (EMEA, APAC, NAMAR, LATAM), and backend VDI administration.\n\n\u2013  ServiceNow & SLA discipline:  Daily ticket work with proactive updates; author Confluence KB articles for team-wide use.\n\n\u2013  Windows, M365, mobile devices:  Daily Windows 10/11 and M365 support, Entra ID identity flows, Intune device management, smartphone and tablet enrolment. AZ-900 certified.\n\n\u2013  Automation:  Built a Python pipeline cutting a two-hour daily job to under ten minutes \u2014 now run by a teammate via SOP.\n\n\u2013  Networking basics:  Frontline troubleshooting for wired and wireless connectivity, with clean escalation to network teams when needed.`;
+  }
+  const refs=PROFILE.references.map(r=>r.name+'  \u00b7  '+r.title+'\n'+r.email+'  \u00b7  '+r.phone).join('\n\n');
+  return PROFILE.name+'\n'+job.title+' \u00b7 '+PROFILE.location+'\n'+PROFILE.email+'  \u00b7  '+PROFILE.phone+'  \u00b7  '+PROFILE.portfolio+'\n\n'+today+'\n\nRE: '+job.title.toUpperCase()+' \u2014 '+job.company.toUpperCase()+'\n\nDear '+job.company+' Hiring Team,\n\nI\u2019m applying for the '+job.title+' role. For the past two years I\u2019ve been an IT Support Specialist at LinkedIn Dublin, supporting users on-site and remotely in a busy, fast-moving environment \u2014 which maps directly to what this role calls for.\n\nWhat I would bring to '+job.company+':\n\n'+bullets+'\n\n'+job.company+' appeals to me as an opportunity to bring a reliable, ownership-minded approach to a new environment. I\u2019m Dublin 2 based and on-site ready. '+PROFILE.stampNote+'\n\nThank you for considering my application \u2014 I\u2019d love to chat further.\n\nKind regards,\n\n'+PROFILE.name+'\n\nREFERENCES\n\n'+refs;
+}
+
+function downloadPDF() {
+  const text=document.getElementById('coverLetterText').value;
+  const job=currentJob; if(!text||!job) return;
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const margin=20,pageW=210,pageH=297,maxW=pageW-margin*2;
+  let y=margin;
+  doc.setFillColor(98,100,167); doc.rect(0,0,pageW,12,'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.text('OLENA KARPENKO  \u00b7  '+job.title.toUpperCase(),margin,8);
+  y=22; doc.setTextColor(30,30,30);
+  const lines=text.split('\n');
+  lines.forEach((line,i)=>{
+    if (y>pageH-margin) { doc.addPage(); y=margin; }
+    const t=line.trim();
+    if (i===0) { doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(70,71,117); doc.text(t,margin,y); y+=8; return; }
+    if (i<=3&&!t.startsWith('RE:')&&!t.startsWith('Dear')) { doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(113,113,122); if(t) doc.text(t,margin,y); y+=5; return; }
+    if (!t) { y+=4; return; }
+    if (t.startsWith('RE:')) { doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(82,84,163); doc.text(t,margin,y); y+=7; return; }
+    if (t==='REFERENCES') {
+      if(y>pageH-50){doc.addPage();y=margin;}
+      doc.setDrawColor(210,210,237); doc.line(margin,y,pageW-margin,y); y+=5;
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(82,84,163); doc.text('REFERENCES',margin,y); y+=6; return;
+    }
+    if (t.startsWith('\u2013')) { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(63,63,70); const w=doc.splitTextToSize(t,maxW); w.forEach(ln=>{if(y>pageH-margin){doc.addPage();y=margin;} doc.text(ln,margin,y);y+=5;}); y+=1; return; }
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(30,30,30);
+    const w=doc.splitTextToSize(t,maxW); w.forEach(ln=>{if(y>pageH-margin){doc.addPage();y=margin;} doc.text(ln,margin,y);y+=5.5;});
+  });
+  const lp=doc.getNumberOfPages(); doc.setPage(lp);
+  doc.setFillColor(244,244,251); doc.rect(0,pageH-10,pageW,10,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(161,161,170);
+  doc.text(PROFILE.portfolio+'  \u00b7  '+PROFILE.linkedin+'  \u00b7  '+PROFILE.email,margin,pageH-4);
+  doc.save('Olena_Karpenko_Cover_Letter_'+job.company.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'')+'.pdf');
+  showSnackbar('\u2705 PDF downloaded!');
+}
+
+function copyLetter() { navigator.clipboard.writeText(document.getElementById('coverLetterText').value).then(()=>showSnackbar('\u2705 Copied to clipboard!')); }
+
+let snackTimer;
+function showSnackbar(msg) { const el=document.getElementById('snackbar'); el.textContent=msg; el.classList.add('show'); clearTimeout(snackTimer); snackTimer=setTimeout(()=>el.classList.remove('show'),3000); }
+
+document.getElementById('queryInput').addEventListener('keydown',e=>{ if(e.key==='Enter') runSearch(); });
+</script>
+</body>
+</html>
