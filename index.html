@@ -196,23 +196,27 @@ document.querySelectorAll('.tf-btn').forEach(btn=>{
 
 async function runSearch() {
   const key='c443b38406msh04817689046f774p18ab8fjsneba82a16742d';
-  // Query is now hardcoded since the input was removed
+  // Hardcoded query since the input was removed
   const query='IT Support Specialist OR IT Support Analyst OR Helpdesk Engineer OR Systems Administrator OR Desktop Support';
   const btn=document.getElementById('searchBtn');
   btn.disabled=true;
   btn.innerHTML='<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0"></div> Searching\u2026';
   document.getElementById('resultsSection').innerHTML='<div class="state-box"><div class="spinner"></div><p>Fetching fresh jobs from LinkedIn\u2026</p></div>';
+  
   try {
     const datePosted=selectedDays===1?'today':selectedDays===3?'week':'month';
-    // Target URL uses num_pages=1
-    const targetUrl='https://jsearch.p.rapidapi.com/search?query='+encodeURIComponent(query+' Dublin Ireland')+'&page=1&num_pages=1&date_posted='+datePosted+'&country=ie';
-    // Wrap it in the CORS proxy to bypass browser preflight failure
+    // Append the API key to the URL parameters
+    const targetUrl='https://jsearch.p.rapidapi.com/search?query='+encodeURIComponent(query+' Dublin Ireland')+'&page=1&num_pages=1&date_posted='+datePosted+'&country=ie&rapidapi-key='+key;
+    // Wrap it in the CORS proxy
     const url='https://corsproxy.io/?'+encodeURIComponent(targetUrl);
     
-    const res=await fetch(url,{method:'GET',headers:{'X-RapidAPI-Key':key,'X-RapidAPI-Host':'jsearch.p.rapidapi.com'}});
+    // Fetch WITHOUT custom headers to bypass the preflight OPTIONS request
+    const res=await fetch(url);
+    
     if (res.status===403||res.status===401){showError('Search failed \u2014 please try again shortly.');return;}
     if (!res.ok){showError('API error ('+res.status+') \u2014 please try again shortly.');return;}
     const data=await res.json();
+    
     allJobs=(data.data||[]).map(j=>({
       id:j.job_id,title:j.job_title||'',company:j.employer_name||'',
       location:[j.job_city,j.job_state,j.job_country].filter(Boolean).join(', ')||'Ireland',
@@ -222,8 +226,12 @@ async function runSearch() {
       posted:j.job_posted_at_datetime_utc||null
     }));
     renderResults(allJobs);
-  } catch(e){showError('Network error \u2014 check your connection and try again.');}
-  finally{btn.disabled=false;btn.innerHTML='&#x1F50D; Search';}
+  } catch(e){
+    showError('Network error \u2014 check your connection and try again.');
+  } finally {
+    btn.disabled=false;
+    btn.innerHTML='&#x1F50D; Search';
+  }
 }
 
 function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'):'';}
